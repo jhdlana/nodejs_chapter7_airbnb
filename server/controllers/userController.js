@@ -31,3 +31,38 @@ exports.register = async (req, res) => {
         })
     }
 }
+
+exports.login = async (req, res) => {
+    try {
+        const {email, password} = req.body
+
+        if(!email || !password) {
+            return res.status(400).json({
+                message: "Email and password are required"
+            })
+        }
+
+        const user = await User.findOne({ email })
+        
+        if(!user) {
+            return res.status(400).json({
+                message: "User not found"
+            })
+        }
+
+        const isPasswordCorrect = await user.isValidatedPassword(password) 
+
+        if(!isPasswordCorrect) {
+            return res.status(401).json({
+                message: "Invalid password"
+            })
+        }
+
+        cookieToken(user, res)
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error: error
+        })
+    }
+}
